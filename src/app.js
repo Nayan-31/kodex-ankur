@@ -1,10 +1,61 @@
 import express from 'express';
 import NoteModel from "./models/notes.model.js";
-
+import mongoose from 'mongoose';
+import userModel from './models/users.model.js';
+import cookies from 'cookie-parser';
+import jwt from 'jsonwebtoken';
 
 
 const app = express();
 app.use(express.json());
+app.use(cookies());
+
+
+/**
+ * @route POST /api/auth/register
+ * @description Register a new user need name and email in the request body
+ * @access Public
+ */
+app.post("/api/auth/register", async (req, res) => {
+    const { name, email } = req.body;
+
+    // ---- Validation ----
+    if (!name) {
+        return res.status(400).json({ error: "Name is required" });
+    }
+
+    if (!email) {
+        return res.status(400).json({ error: "Email is required" });
+    }
+
+    if (name.trim().length < 3) {
+        return res.status(400).json({ error: "Name must be at least 3 characters long" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // ---- If validation passes, create the user ----
+
+    const newUser = await userModel.create({ name, email });
+
+
+    const token = jwt.sign(
+        { id: newUser._id, email: newUser.email },
+        process.env.JWT_SECRET);
+
+
+    res.cookie("token", token)
+
+    return res.status(201).json({
+        message: "User registered successfully",
+        user: newUser
+    });
+
+
+})
 
 
 
@@ -15,6 +66,11 @@ app.use(express.json());
  */
 app.post("/api/notes", async (req, res) => {
     const { title, description } = req.body;
+
+    const token = req.cookies.token;
+    const user = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = user; // { id: "user_id", email: "user_email" }
 
     // ---- Validation ----
     if (!title) {
@@ -35,7 +91,11 @@ app.post("/api/notes", async (req, res) => {
 
     // ---- If validation passes, create the note ----
 
-    const newNote = await NoteModel.create({ title, description });
+    const newNote = await NoteModel.create({
+        title,
+        description,
+        user: req.user.email
+    });
 
     return res.status(201).json({
         message: "Note created successfully",
@@ -51,7 +111,14 @@ app.post("/api/notes", async (req, res) => {
  */
 app.get("/api/notes", async (req, res) => {
 
-    const notes = await NoteModel.find();
+    const token = req.cookies.token;
+    const user = JSON.parse(token);
+
+    req.user = user; // { id: "user_id", email: "user_email" }
+
+    const notes = await NoteModel.find({
+        user: req.user.email
+    });
 
     return res.status(200).json({
         message: "Notes fetched successfully",
@@ -72,6 +139,10 @@ app.patch("/api/notes/:id", async (req, res) => {
     const { description } = req.body;
 
     // ---- Validation ----
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid note ID" });
+    }
+
     if (!description) {
         return res.status(400).json({ error: "Description is required" });
     }
@@ -93,6 +164,37 @@ app.patch("/api/notes/:id", async (req, res) => {
         message: "Note updated successfully",
         note
     });
+})
+
+
+/**
+ * @route DELETE /api/notes/:id
+ * @description Delete a note by id
+ * @access Public
+ */
+app.delete("/api/notes/:id", async (req, res) => {
+
+    const { id } = req.params;
+
+    // ---- Check if id is valid mongoose ObjectId ----
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: "Invalid note ID" });
+    }
+
+    // ---- Check if the note exists ----
+    const note = await NoteModel.findById(id);
+
+    if (!note) {
+        return res.status(404).json({ error: "Note not found" });
+    }
+
+    // ---- If the note exists, delete it ----
+    await NoteModel.findByIdAndDelete(id);
+
+    return res.status(200).json({
+        message: "Note deleted successfully"
+    });
+
 })
 
 
