@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker — Backend Deployment Notes · Sheryians</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Fraunces:ital,wght@0,300;0,600;0,700;0,900;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:       #0E0F14;
+  --paper:     #F5F2EB;
+  --paper2:    #EDE9DF;
+  --paper3:    #E4DFD3;
+  --rule:      #D4CEBC;
+  --muted:     #6B6455;
+  --accent:    #C84B1F;
+  --accent2:   #1A6B4A;
+  --accent3:   #1B4587;
+  --gold:      #B8860B;
+  --code-bg:   #1A1C24;
+  --code-text: #E2DCCC;
+  --flag-c:    #5BA4CF;
+  --val-c:     #F4A261;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.layout { display: flex; min-height: 100vh; }
+
+/* ---------- NAV ---------- */
+nav {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--ink);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 32px 0 40px;
+}
+
+.nav-brand { padding: 0 24px 24px; }
+.nav-brand .logo {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+.nav-brand .logo span { color: var(--accent); }
+.nav-brand .sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.nav-group-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 18px 24px 8px;
+}
+
+nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+nav a:hover { color: #fff; background: rgba(255,255,255,0.04); }
+nav a.active {
+  color: #fff;
+  border-left-color: var(--accent);
+  background: rgba(200,75,31,0.08);
+}
+.nav-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255,255,255,0.08);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+nav a:hover .nav-num, nav a.active .nav-num {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- MAIN ---------- */
+main {
+  flex: 1;
+  max-width: calc(99% - 256px);
+  padding: 56px 56px 80px;
+}
+
+/* ---------- HERO ---------- */
+.hero { margin-bottom: 64px; padding-bottom: 40px; border-bottom: 1px solid var(--rule); }
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 58px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+.hero h1 em { font-style: italic; color: var(--accent); font-weight: 900; }
+.hero-desc {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 560px;
+  line-height: 1.65;
+  margin-bottom: 24px;
+}
+.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.hero-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+/* ---------- SECTION ---------- */
+.section { margin-bottom: 72px; animation: fadeUp 0.4s ease both; }
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.section-num-big {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--rule);
+  line-height: 1;
+  user-select: none;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.section-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 28px 0 12px;
+}
+h4 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 20px 0 10px;
+}
+p {
+  font-size: 14.5px;
+  color: #2A2720;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+strong { font-weight: 500; color: var(--ink); }
+
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--paper3);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+ul, ol { margin: 0 0 12px 20px; }
+li { font-size: 14.5px; color: #2A2720; line-height: 1.7; margin-bottom: 6px; }
+
+/* ---------- CONCEPT BOX ---------- */
+.concept {
+  background: var(--paper2);
+  border-left: 3px solid var(--accent3);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+.concept-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--accent3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.concept p { font-size: 14px; color: var(--ink); line-height: 1.65; margin: 0; }
+.concept p + p { margin-top: 8px; }
+
+/* ---------- NOTE BOX ---------- */
+.note {
+  display: flex;
+  gap: 12px;
+  background: #FEF9EC;
+  border: 1px solid #EDD97A;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.note p { font-size: 13px; color: #5C4A00; margin: 0; line-height: 1.6; }
+.note strong { color: #3D3000; }
+.note-icon { flex-shrink: 0; font-size: 15px; line-height: 1.4; }
+
+/* ---------- WARN BOX ---------- */
+.warn {
+  display: flex;
+  gap: 12px;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.warn p { font-size: 13px; color: #7F1D1D; margin: 0; line-height: 1.6; }
+.warn strong { color: #7F1D1D; font-weight: 600; }
+
+/* ---------- STEP LABEL ---------- */
+.step-label {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin: 16px 0 8px;
+}
+.step-label.green { background: var(--accent2); }
+.step-label.blue { background: var(--accent3); }
+.step-label.gold { background: var(--gold); }
+
+/* ---------- CODE BLOCK ---------- */
+.code-wrap {
+  background: var(--code-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.code-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.04em;
+}
+.copy-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.copy-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+pre {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  color: var(--code-text);
+  padding: 16px;
+  overflow-x: auto;
+  line-height: 1.7;
+  white-space: pre;
+}
+.c-cmd { color: #87CEEB; font-weight: 600; }
+.c-flag { color: #5BA4CF; }
+.c-val { color: #F4A261; }
+.c-str { color: #98C379; }
+.c-comment { color: rgba(255,255,255,0.28); font-style: italic; }
+.c-key { color: #C678DD; }
+.c-pipe { color: #E5C07B; }
+
+/* ---------- FLAG TABLE ---------- */
+table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+.flag-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--paper3);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.flag-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.flag-table tr:hover td { background: var(--paper2); }
+.f-name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--flag-c); }
+.f-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--val-c); }
+.f-desc { font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); }
+.f-why { font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted); }
+
+/* ---------- COMPARE TABLE ---------- */
+.compare th {
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 14px;
+}
+.compare th:first-child { border-top-left-radius: 8px; }
+.compare th:last-child { border-top-right-radius: 8px; }
+.compare td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 13.5px;
+  vertical-align: top;
+}
+.compare tr:hover td { background: var(--paper2); }
+.row-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.local-val { color: var(--muted); }
+.eks-val { color: var(--accent2); font-weight: 500; }
+
+/* ---------- FLOW DIAGRAM ---------- */
+.flow { margin: 16px 0; }
+.flow-step { display: flex; gap: 16px; }
+.flow-line { display: flex; flex-direction: column; align-items: center; }
+.flow-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.flow-connector { width: 2px; flex: 1; background: var(--rule); margin: 4px 0; min-height: 16px; }
+.flow-content { padding-bottom: 16px; }
+.flow-title { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--ink); }
+.flow-detail { font-family: 'DM Sans', sans-serif; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+/* ---------- SCALE DIAGRAM ---------- */
+.scale-diagram {
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 16px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 2;
+  color: var(--muted);
+}
+.scale-diagram .hi { color: var(--ink); font-weight: 600; }
+.scale-diagram .green { color: var(--accent2); }
+.scale-diagram .red { color: var(--accent); }
+
+/* ---------- DIVIDER ---------- */
+.divider { border: none; border-top: 1px solid var(--rule); margin: 40px 0; }
+
+/* ---------- FOOTER ---------- */
+footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 2px solid var(--rule);
+  padding-top: 20px;
+  margin-top: 40px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---------- WATERMARK ---------- */
+.watermark {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(14,15,20,0.90);
+  border: 1px solid rgba(200,75,31,0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  pointer-events: none;
+}
+.watermark-logo { width: 14px; height: 14px; border-radius: 3px; }
+.watermark-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.08em;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  nav { display: none; }
+  main { padding: 32px 24px 60px; max-width: 100%; }
+  .section-num-big { font-size: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section { animation: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="nav-brand">
+    <div class="logo">Docker<span>.</span>Backend</div>
+    <div class="sub">Sheryians Coding School</div>
+  </div>
+
+  <div class="nav-group-label">The Why</div>
+  <a href="#problem"><span class="nav-num">1</span>The Problem</a>
+  <a href="#what-is"><span class="nav-num">2</span>What Docker Is</a>
+  <a href="#mental-model"><span class="nav-num">3</span>Mental Model</a>
+
+  <div class="nav-group-label">The Building Blocks</div>
+  <a href="#images-containers"><span class="nav-num">4</span>Images & Containers</a>
+  <a href="#dockerfile"><span class="nav-num">5</span>Dockerfile</a>
+  <a href="#commands"><span class="nav-num">6</span>Core Commands</a>
+
+  <div class="nav-group-label">Real Backend</div>
+  <a href="#node-app"><span class="nav-num">7</span>Dockerize Node API</a>
+  <a href="#env-ports"><span class="nav-num">8</span>Env & Ports</a>
+  <a href="#volumes"><span class="nav-num">9</span>Volumes & Data</a>
+  <a href="#compose"><span class="nav-num">10</span>Multi-Service Compose</a>
+
+  <div class="nav-group-label">Wrap Up</div>
+  <a href="#cheatsheet"><span class="nav-num">11</span>Cheat Sheet</a>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-eyebrow">Backend · MERN · Module 01</div>
+    <h1>Docker, explained the way <em>you'll actually use it</em>.</h1>
+    <p class="hero-desc">Your Node + Express + MongoDB backend runs perfectly on your laptop, then dies on your friend's machine and again on the server. This is the problem Docker was built to kill. We'll start with the pain, then build up the fix — piece by piece.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">node 20</span>
+      <span class="hero-tag">express</span>
+      <span class="hero-tag">mongodb</span>
+      <span class="hero-tag">docker</span>
+      <span class="hero-tag">docker compose</span>
+    </div>
+  </div>
+
+  <!-- ========== SECTION 1: THE PROBLEM ========== -->
+  <section class="section" id="problem">
+    <div class="section-header">
+      <div class="section-num-big">01</div>
+      <div class="section-title-block">
+        <div class="section-title">The Problem — "Works on my machine"</div>
+        <div class="section-subtitle">Before the solution, feel the pain. This is why Docker exists.</div>
+      </div>
+    </div>
+
+    <p>You build a MERN backend. Node 20, Express, a few npm packages, and it connects to MongoDB. On your laptop, <code>npm start</code> works flawlessly. Then you do one of these things:</p>
+
+    <ul>
+      <li>You send the project to a teammate to run.</li>
+      <li>You deploy it to a server (EC2, a VPS, anywhere).</li>
+      <li>You come back to the project six months later on a fresh OS install.</li>
+    </ul>
+
+    <p>And suddenly — it breaks. The same code. The errors look like this:</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">your teammate's terminal</span></div>
+<pre><span class="c-comment"># they have Node 16, you built on Node 20</span>
+SyntaxError: Unexpected token '?' <span class="c-comment"># optional chaining not supported</span>
+
+<span class="c-comment"># or a native package compiled for your OS, not theirs</span>
+Error: Cannot find module 'bcrypt'
+<span class="c-comment"># ...node-gyp rebuild failed</span>
+
+<span class="c-comment"># or Mongo isn't even installed on the server</span>
+MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017</pre>
+    </div>
+
+    <p>Your code is fine. What differs is <strong>everything around the code</strong> — the Node version, the OS, the installed system libraries, whether Mongo exists, which environment variables are set. This invisible bundle is called the <strong>environment</strong>, and it never travels with your code.</p>
+
+    <div class="concept">
+      <div class="concept-label">The Core Problem</div>
+      <p>Code is only half of what runs. The other half is the <strong>environment</strong> — OS, runtime version, system libraries, dependencies, config. You ship the code but not the environment, so the same code behaves differently everywhere.</p>
+    </div>
+
+    <h3>How we used to "solve" it (and why it hurts)</h3>
+
+    <table class="compare">
+      <thead>
+        <tr><th>Old approach</th><th>What goes wrong</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">A README with setup steps</td>
+          <td class="local-val">"Install Node 20, then Mongo, then set these 8 env vars..." — humans skip steps, versions drift, it rots.</td>
+        </tr>
+        <tr>
+          <td class="row-label">A full Virtual Machine</td>
+          <td class="local-val">Ships a whole OS per app. 5–10 GB each, slow to boot, heavy on RAM. One VM per service is painful.</td>
+        </tr>
+        <tr>
+          <td class="row-label">"It works, don't touch the server"</td>
+          <td class="local-val">The server becomes a fragile pet nobody can rebuild. Lose it and you lose everything.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>We need a way to package the code <strong>together with its entire environment</strong>, so the exact same thing runs identically on any machine — laptop, teammate's PC, or production server. That package is what Docker gives us.</p>
+  </section>
+
+  <!-- ========== SECTION 2: WHAT DOCKER IS ========== -->
+  <section class="section" id="what-is">
+    <div class="section-header">
+      <div class="section-num-big">02</div>
+      <div class="section-title-block">
+        <div class="section-title">What Docker Is</div>
+        <div class="section-subtitle">The fix: package code + environment into one portable unit.</div>
+      </div>
+    </div>
+
+    <p>Docker lets you bundle your app <strong>and everything it needs to run</strong> into a single, sealed package called a <strong>container</strong>. The container carries the OS layer, Node, your code, your dependencies — all of it. Ship that container anywhere Docker is installed, and it runs the same. The "works on my machine" excuse dies, because now your machine <em>is</em> the container, and you ship the whole machine.</p>
+
+    <div class="concept">
+      <div class="concept-label">One-line definition</div>
+      <p><strong>Docker</strong> packages your application and its complete environment into a <strong>container</strong> — an isolated, portable unit that runs identically on any machine with Docker installed.</p>
+    </div>
+
+    <h3>Container vs Virtual Machine — why containers won</h3>
+
+    <p>This is the question every beginner asks: "isn't this just a VM?" No — and the difference is exactly why Docker is fast and light.</p>
+
+    <table class="compare">
+      <thead>
+        <tr><th>What</th><th>Virtual Machine</th><th>Docker Container</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">What it ships</td>
+          <td class="local-val">A full guest OS + your app</td>
+          <td class="eks-val">Just your app + its dependencies ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Size</td>
+          <td class="local-val">Several GB each</td>
+          <td class="eks-val">Tens to hundreds of MB ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Boot time</td>
+          <td class="local-val">Minutes</td>
+          <td class="eks-val">Seconds or less ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">OS kernel</td>
+          <td class="local-val">Each VM runs its own kernel</td>
+          <td class="eks-val">All containers share the host kernel ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Run 5 services?</td>
+          <td class="local-val">5 heavy VMs, lots of RAM</td>
+          <td class="eks-val">5 light containers, minimal overhead ✓</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="concept">
+      <div class="concept-label">Why containers are light</div>
+      <p>A VM virtualizes <strong>hardware</strong> and boots a whole OS on top. A container virtualizes only the <strong>operating system</strong> — it shares the host's kernel and isolates just the process. Less to ship, less to boot, less to run.</p>
+    </div>
+
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p>Containers feel like lightweight VMs, but they are really just <strong>isolated processes</strong> on your machine that <em>think</em> they have their own filesystem, network, and dependencies.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 3: MENTAL MODEL ========== -->
+  <section class="section" id="mental-model">
+    <div class="section-header">
+      <div class="section-num-big">03</div>
+      <div class="section-title-block">
+        <div class="section-title">The Mental Model</div>
+        <div class="section-subtitle">Three words that unlock everything: Dockerfile, Image, Container.</div>
+      </div>
+    </div>
+
+    <p>Almost all Docker confusion comes from mixing up three words. Lock these down now and the rest is easy. Use the cooking analogy — it always works:</p>
+
+    <table class="flag-table">
+      <thead>
+        <tr><th>Term</th><th>Cooking analogy</th><th>What it actually is</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="f-name">Dockerfile</span></td>
+          <td><span class="f-val">the recipe</span></td>
+          <td class="f-desc">A text file of instructions: which base to use, what to copy, what to install, how to start.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">Image</span></td>
+          <td><span class="f-val">the frozen meal</span></td>
+          <td class="f-desc">The built result of the recipe. A read-only, shippable snapshot. Build once, reuse many times.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">Container</span></td>
+          <td><span class="f-val">the served dish</span></td>
+          <td class="f-desc">A running instance of an image. You can run many containers from one image at once.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>The flow is always one direction — you write a recipe, build it into an image, then run that image as a container:</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+        <div class="flow-content">
+          <div class="flow-title">Write a Dockerfile</div>
+          <div class="flow-detail">You author the instructions. "Start from Node 20, copy my code, install deps, run npm start."</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+        <div class="flow-content">
+          <div class="flow-title">docker build → Image</div>
+          <div class="flow-detail">Docker reads the recipe and bakes a frozen, read-only snapshot. This is what you share or push.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--accent2)"></div></div>
+        <div class="flow-content">
+          <div class="flow-title">docker run → Container</div>
+          <div class="flow-detail">Docker spins up a live, running instance of the image. This is your actual running backend.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p>One image, many containers. Build your API image once, then run three copies behind a load balancer — same image, three containers. This is the foundation of scaling.</p>
+    </div>
+
+    <h3>Where do images come from? — Docker Hub</h3>
+    <p>You rarely start from nothing. <strong>Docker Hub</strong> is a public registry of pre-built images. <code>node</code>, <code>mongo</code>, <code>redis</code>, <code>nginx</code> — all official images you can pull and build on top of. Your Dockerfile's first line is almost always "start <em>from</em> one of these."</p>
+  </section>
+
+  <!-- ========== SECTION 4: IMAGES & CONTAINERS ========== -->
+  <section class="section" id="images-containers">
+    <div class="section-header">
+      <div class="section-num-big">04</div>
+      <div class="section-title-block">
+        <div class="section-title">Images & Containers, Hands-On</div>
+        <div class="section-subtitle">Pull a real image and run it before we build our own.</div>
+      </div>
+    </div>
+
+    <p>Best way to understand the image → container jump is to do it once with something that already exists. Let's pull the official Node image and poke at it.</p>
+
+    <div class="step-label">Step 1 — Pull an image from Docker Hub</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> pull <span class="c-val">node:20-alpine</span></pre>
+    </div>
+    <p>This downloads the Node 20 image (the <code>alpine</code> tag is a tiny Linux base — more on that later). It now lives on your machine, frozen and ready.</p>
+
+    <div class="step-label green">Verify — list your images</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> images</pre>
+    </div>
+
+    <div class="step-label">Step 2 — Run it as a container</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-it</span> <span class="c-val">node:20-alpine</span> node <span class="c-flag">-v</span>
+<span class="c-comment"># prints v20.x.x — Node running inside an isolated container,</span>
+<span class="c-comment"># even if you have NO Node installed on your host machine</span></pre>
+    </div>
+
+    <div class="concept">
+      <div class="concept-label">Let this sink in</div>
+      <p>You just ran Node 20 without installing Node. The container brought its own. This is the whole point — the environment travels <strong>inside</strong> the image.</p>
+    </div>
+
+    <div class="step-label green">Verify — see running & stopped containers</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> ps          <span class="c-comment"># currently running containers</span>
+<span class="c-cmd">docker</span> ps <span class="c-flag">-a</span>       <span class="c-comment"># all containers, including stopped ones</span></pre>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 5: DOCKERFILE ========== -->
+  <section class="section" id="dockerfile">
+    <div class="section-header">
+      <div class="section-num-big">05</div>
+      <div class="section-title-block">
+        <div class="section-title">The Dockerfile</div>
+        <div class="section-subtitle">The recipe for your own backend image, line by line.</div>
+      </div>
+    </div>
+
+    <p>A Dockerfile is a plain text file named exactly <code>Dockerfile</code> (no extension) at the root of your project. Each line is an instruction Docker runs top to bottom to build your image. Here's a complete one for an Express API — read it first, then we'll break down every line.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">Dockerfile</span></div>
+<pre><span class="c-key">FROM</span> <span class="c-val">node:20-alpine</span>
+
+<span class="c-key">WORKDIR</span> <span class="c-val">/app</span>
+
+<span class="c-key">COPY</span> <span class="c-val">package*.json ./</span>
+
+<span class="c-key">RUN</span> <span class="c-val">npm install</span>
+
+<span class="c-key">COPY</span> <span class="c-val">. .</span>
+
+<span class="c-key">EXPOSE</span> <span class="c-val">5000</span>
+
+<span class="c-key">CMD</span> <span class="c-val">["node", "server.js"]</span></pre>
+    </div>
+
+    <table class="flag-table">
+      <thead>
+        <tr><th>Instruction</th><th>What it does</th><th>Why it matters</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="f-name">FROM</span></td>
+          <td class="f-desc">Sets the base image to build on top of.</td>
+          <td class="f-why">You inherit a working Node 20 + Linux. Never start from scratch.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">WORKDIR</span></td>
+          <td class="f-desc">Sets the working directory inside the container.</td>
+          <td class="f-why">All later commands run from <code>/app</code>. Keeps things tidy.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">COPY package*.json</span></td>
+          <td class="f-desc">Copies only the package files first.</td>
+          <td class="f-why">Layer caching — deps only reinstall when package.json changes, not on every code edit.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">RUN</span></td>
+          <td class="f-desc">Executes a command at build time.</td>
+          <td class="f-why">Installs your dependencies <em>into</em> the image, so they ship with it.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">COPY . .</span></td>
+          <td class="f-desc">Copies the rest of your source code in.</td>
+          <td class="f-why">After deps are cached — your actual app code.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">EXPOSE</span></td>
+          <td class="f-desc">Documents which port the app listens on.</td>
+          <td class="f-why">A signpost for humans & tools. Doesn't publish the port by itself.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">CMD</span></td>
+          <td class="f-desc">The command run when the container <em>starts</em>.</td>
+          <td class="f-why">RUN is build-time; CMD is run-time. This launches your server.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="concept">
+      <div class="concept-label">RUN vs CMD — the classic confusion</div>
+      <p><strong>RUN</strong> happens once, while <em>building</em> the image (e.g. installing packages). <strong>CMD</strong> happens every time you <em>start</em> a container from that image (e.g. launching your server). Build-time vs run-time.</p>
+    </div>
+
+    <h3>The .dockerignore file — don't skip this</h3>
+    <p>Just like <code>.gitignore</code>, a <code>.dockerignore</code> keeps junk out of your image. Most important: never copy <code>node_modules</code> from your host — they may be built for your OS and will conflict with the <code>npm install</code> done inside the container.</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">.dockerignore</span></div>
+<pre>node_modules
+npm-debug.log
+.env
+.git
+Dockerfile
+.dockerignore</pre>
+    </div>
+
+    <div class="warn">
+      <div class="note-icon">⚠️</div>
+      <p><strong>Never copy host <code>node_modules</code> into an image.</strong> Native packages like <code>bcrypt</code> are compiled for a specific OS. The container installs its own — let it. Copying yours causes the exact "Cannot find module" errors we saw in Section 01.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 6: CORE COMMANDS ========== -->
+  <section class="section" id="commands">
+    <div class="section-header">
+      <div class="section-num-big">06</div>
+      <div class="section-title-block">
+        <div class="section-title">Core Commands You'll Use Daily</div>
+        <div class="section-subtitle">The 10 commands that cover 90% of real work.</div>
+      </div>
+    </div>
+
+    <div class="step-label">Build an image from your Dockerfile</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> build <span class="c-flag">-t</span> <span class="c-val">my-api</span> <span class="c-val">.</span></pre>
+    </div>
+    <table class="flag-table">
+      <thead><tr><th>Flag</th><th>Value</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><span class="f-name">-t</span></td><td><span class="f-val">my-api</span></td><td class="f-desc">Tags (names) the image so you can refer to it later.</td></tr>
+        <tr><td><span class="f-name">.</span></td><td><span class="f-val">(current dir)</span></td><td class="f-desc">The build context — where the Dockerfile and code live.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="step-label">Run a container from the image</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">5000:5000</span> <span class="c-flag">--name</span> <span class="c-val">api</span> <span class="c-val">my-api</span></pre>
+    </div>
+    <table class="flag-table">
+      <thead><tr><th>Flag</th><th>Value</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><span class="f-name">-d</span></td><td><span class="f-val">—</span></td><td class="f-desc">Detached — runs in the background, frees your terminal.</td></tr>
+        <tr><td><span class="f-name">-p</span></td><td><span class="f-val">5000:5000</span></td><td class="f-desc">Maps host port → container port (covered next section).</td></tr>
+        <tr><td><span class="f-name">--name</span></td><td><span class="f-val">api</span></td><td class="f-desc">Gives the container a friendly name instead of a random one.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="step-label blue">Inspect & debug</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> ps                      <span class="c-comment"># what's running</span>
+<span class="c-cmd">docker</span> logs <span class="c-flag">-f</span> <span class="c-val">api</span>            <span class="c-comment"># stream logs (-f = follow)</span>
+<span class="c-cmd">docker</span> exec <span class="c-flag">-it</span> <span class="c-val">api</span> sh         <span class="c-comment"># open a shell INSIDE the running container</span></pre>
+    </div>
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p><code>docker exec -it api sh</code> is your best friend for debugging — it drops you inside the live container so you can check files, env vars, and network from the app's point of view.</p>
+    </div>
+
+    <div class="step-label gold">Stop & clean up</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> stop <span class="c-val">api</span>              <span class="c-comment"># stop a running container</span>
+<span class="c-cmd">docker</span> rm <span class="c-val">api</span>                <span class="c-comment"># remove a stopped container</span>
+<span class="c-cmd">docker</span> rmi <span class="c-val">my-api</span>            <span class="c-comment"># remove an image</span>
+<span class="c-cmd">docker</span> system prune <span class="c-flag">-a</span>        <span class="c-comment"># nuke unused images/containers (reclaim disk)</span></pre>
+    </div>
+    <div class="warn">
+      <div class="note-icon">⚠️</div>
+      <p><strong>docker system prune -a</strong> deletes <em>all</em> stopped containers and unused images, not just dangling ones. Great for reclaiming gigabytes — but be sure you don't need them first.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 7: DOCKERIZE NODE API ========== -->
+  <section class="section" id="node-app">
+    <div class="section-header">
+      <div class="section-num-big">07</div>
+      <div class="section-title-block">
+        <div class="section-title">Dockerize a Real Express API</div>
+        <div class="section-subtitle">End to end — from source code to a running container.</div>
+      </div>
+    </div>
+
+    <p>Let's take a minimal Express backend and containerize it fully. Here's the app we're shipping:</p>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">server.js</span></div>
+<pre><span class="c-key">const</span> express = <span class="c-cmd">require</span>(<span class="c-str">"express"</span>);
+<span class="c-key">const</span> app = <span class="c-cmd">express</span>();
+
+<span class="c-key">const</span> PORT = process.env.PORT || <span class="c-val">5000</span>;
+
+app.<span class="c-cmd">get</span>(<span class="c-str">"/"</span>, (req, res) => {
+  res.<span class="c-cmd">json</span>({ status: <span class="c-str">"API is running inside Docker 🐳"</span> });
+});
+
+app.<span class="c-cmd">listen</span>(PORT, () => {
+  <span class="c-cmd">console</span>.log(<span class="c-str">`Server on port ${PORT}`</span>);
+});</pre>
+    </div>
+
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p>Notice <code>process.env.PORT || 5000</code>. Reading config from the environment (not hardcoding it) is what makes the same image reusable across dev, staging, and prod. We'll feed that env var in the next section.</p>
+    </div>
+
+    <h3>Project structure</h3>
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">my-api/</span></div>
+<pre>my-api/
+├── server.js
+├── package.json
+├── Dockerfile
+└── .dockerignore</pre>
+    </div>
+
+    <div class="step-label">Step 1 — Build the image</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> build <span class="c-flag">-t</span> <span class="c-val">my-api</span> <span class="c-val">.</span></pre>
+    </div>
+
+    <div class="step-label">Step 2 — Run the container</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">5000:5000</span> <span class="c-flag">--name</span> <span class="c-val">api</span> <span class="c-val">my-api</span></pre>
+    </div>
+
+    <div class="step-label green">Step 3 — Verify it works</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">curl</span> <span class="c-val">http://localhost:5000</span>
+<span class="c-comment"># {"status":"API is running inside Docker 🐳"}</span></pre>
+    </div>
+
+    <div class="concept">
+      <div class="concept-label">What just happened</div>
+      <p>Your laptop has no idea what Node version the app needs — and doesn't care. The container brought Node 20, installed its own dependencies, and served the API. Hand this image to anyone with Docker and they get the identical result. <strong>The Section 01 problem is solved.</strong></p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 8: ENV & PORTS ========== -->
+  <section class="section" id="env-ports">
+    <div class="section-header">
+      <div class="section-num-big">08</div>
+      <div class="section-title-block">
+        <div class="section-title">Ports & Environment Variables</div>
+        <div class="section-subtitle">Two things every backend needs, and where beginners get stuck.</div>
+      </div>
+    </div>
+
+    <h3>Port mapping — the container is an island</h3>
+    <p>A container is isolated by default. Your app listening on port 5000 <em>inside</em> the container is invisible from your laptop until you build a bridge. That bridge is <code>-p host:container</code>.</p>
+
+    <div class="scale-diagram">
+      <span class="hi">Your browser → localhost:3000</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓ <span class="green">-p 3000:5000</span><br>
+      <span class="hi">Container port 5000</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+      <span class="green">Express app responds ✅</span>
+    </div>
+
+    <div class="concept">
+      <div class="concept-label">Reading -p left to right</div>
+      <p><code>-p 3000:5000</code> means "traffic hitting <strong>host</strong> port 3000 forwards to <strong>container</strong> port 5000." The left number is the one you type in your browser; the right is what the app listens on inside.</p>
+    </div>
+
+    <div class="warn">
+      <div class="note-icon">⚠️</div>
+      <p>Forgot <code>-p</code> entirely? The container runs fine, logs look healthy — but <code>localhost:5000</code> refuses to connect. No bridge, no access. This trips up nearly every beginner once.</p>
+    </div>
+
+    <h3>Environment variables — config without rebuilding</h3>
+    <p>Secrets and config (DB URLs, ports, API keys) must <strong>never</strong> be baked into the image. Inject them at run time so one image works everywhere.</p>
+
+    <div class="step-label">Pass vars inline with -e</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">5000:5000</span> <span class="c-pipe">\</span>
+  <span class="c-flag">-e</span> <span class="c-val">PORT=5000</span> <span class="c-pipe">\</span>
+  <span class="c-flag">-e</span> <span class="c-val">MONGO_URI=mongodb://host.docker.internal:27017/mydb</span> <span class="c-pipe">\</span>
+  <span class="c-flag">--name</span> <span class="c-val">api</span> <span class="c-val">my-api</span></pre>
+    </div>
+
+    <div class="step-label blue">Cleaner — load from an env file</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">5000:5000</span> <span class="c-flag">--env-file</span> <span class="c-val">.env</span> <span class="c-flag">--name</span> <span class="c-val">api</span> <span class="c-val">my-api</span></pre>
+    </div>
+
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p>Same image, different env file per environment — dev, staging, production. Build once, configure at run time. This is the whole reason we read <code>process.env.PORT</code> instead of hardcoding.</p>
+    </div>
+
+    <div class="concept">
+      <div class="concept-label">host.docker.internal</div>
+      <p>Inside a container, <code>localhost</code> means <em>the container itself</em>, not your laptop. To reach a service running on your host machine (like a local Mongo), use <code>host.docker.internal</code> instead of <code>localhost</code>.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 9: VOLUMES ========== -->
+  <section class="section" id="volumes">
+    <div class="section-header">
+      <div class="section-num-big">09</div>
+      <div class="section-title-block">
+        <div class="section-title">Volumes — Don't Lose Your Data</div>
+        <div class="section-subtitle">Containers are disposable. Your database can't be.</div>
+      </div>
+    </div>
+
+    <p>Here's a brutal lesson best learned early: <strong>containers are temporary.</strong> Anything written inside a container's own filesystem vanishes the moment it's removed. If your MongoDB stores its data <em>inside</em> the container and you run <code>docker rm</code> — every record is gone.</p>
+
+    <div class="scale-diagram">
+      <span class="hi">Mongo container running, data inside it</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓ <span class="red">docker rm mongo</span><br>
+      <span class="red">All data destroyed ❌</span><br>
+      <br>
+      <span class="hi">Mongo container + volume</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;↓ <span class="green">docker rm mongo</span><br>
+      <span class="green">Data survives in the volume ✅</span>
+    </div>
+
+    <div class="concept">
+      <div class="concept-label">Key Concept</div>
+      <p>A <strong>volume</strong> is storage that lives <em>outside</em> the container's lifecycle, managed by Docker on the host. Containers come and go; the volume — and your data — persists.</p>
+    </div>
+
+    <h3>Two kinds of mounts you'll use</h3>
+    <table class="flag-table">
+      <thead><tr><th>Type</th><th>Syntax</th><th>Use it for</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="f-name">Named volume</span></td>
+          <td><span class="f-val">-v mongo-data:/data/db</span></td>
+          <td class="f-desc">Persisting database data. Docker manages where it lives on disk.</td>
+        </tr>
+        <tr>
+          <td><span class="f-name">Bind mount</span></td>
+          <td><span class="f-val">-v $(pwd):/app</span></td>
+          <td class="f-desc">Dev hot-reload — maps your live source folder into the container.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="step-label">Run MongoDB with a persistent volume</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">27017:27017</span> <span class="c-pipe">\</span>
+  <span class="c-flag">-v</span> <span class="c-val">mongo-data:/data/db</span> <span class="c-pipe">\</span>
+  <span class="c-flag">--name</span> <span class="c-val">mongo</span> <span class="c-val">mongo:7</span></pre>
+    </div>
+    <p>Now <code>docker rm mongo</code> and re-run it — your data is still there, restored from the <code>mongo-data</code> volume.</p>
+
+    <div class="note">
+      <div class="note-icon">💡</div>
+      <p>Bind mounts for development are a superpower: mount your code into the container so edits on your laptop reflect instantly inside it — no rebuild needed. Pair with <code>nodemon</code> for live reload.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 10: COMPOSE ========== -->
+  <section class="section" id="compose">
+    <div class="section-header">
+      <div class="section-num-big">10</div>
+      <div class="section-title-block">
+        <div class="section-title">Docker Compose — API + Database Together</div>
+        <div class="section-subtitle">Real backends are never one container. Orchestrate them with one file.</div>
+      </div>
+    </div>
+
+    <p>Your MERN backend isn't just Node — it's Node <em>and</em> MongoDB, maybe Redis too. Running each by hand with long <code>docker run</code> commands, in the right order, wiring up networks — that's misery. <strong>Docker Compose</strong> defines all of it in one YAML file and starts everything with a single command.</p>
+
+    <div class="concept">
+      <div class="concept-label">Why Compose exists</div>
+      <p>One <code>docker-compose.yml</code> describes every service, their config, volumes, and how they connect. <code>docker compose up</code> brings the whole stack online together — reproducibly, in order.</p>
+    </div>
+
+    <div class="code-wrap">
+      <div class="code-header"><span class="code-label">docker-compose.yml</span></div>
+<pre><span class="c-key">services</span>:
+  <span class="c-key">api</span>:
+    <span class="c-key">build</span>: <span class="c-val">.</span>
+    <span class="c-key">ports</span>:
+      - <span class="c-val">"5000:5000"</span>
+    <span class="c-key">environment</span>:
+      - <span class="c-val">PORT=5000</span>
+      - <span class="c-val">MONGO_URI=mongodb://mongo:27017/mydb</span>
+    <span class="c-key">depends_on</span>:
+      - <span class="c-val">mongo</span>
+
+  <span class="c-key">mongo</span>:
+    <span class="c-key">image</span>: <span class="c-val">mongo:7</span>
+    <span class="c-key">ports</span>:
+      - <span class="c-val">"27017:27017"</span>
+    <span class="c-key">volumes</span>:
+      - <span class="c-val">mongo-data:/data/db</span>
+
+<span class="c-key">volumes</span>:
+  <span class="c-key">mongo-data</span>:</pre>
+    </div>
+
+    <table class="flag-table">
+      <thead><tr><th>Key</th><th>What it does</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td><span class="f-name">build: .</span></td><td class="f-desc">Builds the api image from your local Dockerfile.</td><td class="f-why">No manual <code>docker build</code> step.</td></tr>
+        <tr><td><span class="f-name">image: mongo:7</span></td><td class="f-desc">Pulls Mongo straight from Docker Hub.</td><td class="f-why">No Dockerfile needed for off-the-shelf services.</td></tr>
+        <tr><td><span class="f-name">depends_on</span></td><td class="f-desc">Starts mongo before api.</td><td class="f-why">Controls startup order.</td></tr>
+        <tr><td><span class="f-name">volumes</span></td><td class="f-desc">Declares the named volume for Mongo data.</td><td class="f-why">Data survives restarts (Section 09).</td></tr>
+      </tbody>
+    </table>
+
+    <div class="concept">
+      <div class="concept-label">The magic: service names are hostnames</div>
+      <p>Notice the URI is <code>mongodb://mongo:27017</code> — not <code>localhost</code>. Compose puts all services on one network where each is reachable by its <strong>service name</strong>. The api talks to <code>mongo</code> directly. No IP addresses, no <code>host.docker.internal</code>.</p>
+    </div>
+
+    <div class="step-label">Start the whole stack</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> compose up <span class="c-flag">-d</span>          <span class="c-comment"># build + start everything, detached</span>
+<span class="c-cmd">docker</span> compose logs <span class="c-flag">-f</span>          <span class="c-comment"># stream logs from all services</span></pre>
+    </div>
+
+    <div class="step-label gold">Tear it down</div>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> compose down            <span class="c-comment"># stop & remove containers + network</span>
+<span class="c-cmd">docker</span> compose down <span class="c-flag">-v</span>         <span class="c-comment"># ...also delete volumes (wipes DB data!)</span></pre>
+    </div>
+
+    <div class="warn">
+      <div class="note-icon">⚠️</div>
+      <p><code>docker compose down -v</code> removes the volumes too — your Mongo data is permanently deleted. Plain <code>down</code> keeps data safe; add <code>-v</code> only when you truly want a clean slate.</p>
+    </div>
+  </section>
+
+  <!-- ========== SECTION 11: CHEAT SHEET ========== -->
+  <section class="section" id="cheatsheet">
+    <div class="section-header">
+      <div class="section-num-big">11</div>
+      <div class="section-title-block">
+        <div class="section-title">Cheat Sheet</div>
+        <div class="section-subtitle">Print this. Pin it. The commands you'll actually reach for.</div>
+      </div>
+    </div>
+
+    <h4>Images</h4>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> build <span class="c-flag">-t</span> <span class="c-val">name</span> <span class="c-val">.</span>       <span class="c-comment"># build image from Dockerfile</span>
+<span class="c-cmd">docker</span> images                <span class="c-comment"># list images</span>
+<span class="c-cmd">docker</span> pull <span class="c-val">node:20-alpine</span>   <span class="c-comment"># download from Docker Hub</span>
+<span class="c-cmd">docker</span> rmi <span class="c-val">name</span>              <span class="c-comment"># remove image</span></pre>
+    </div>
+
+    <h4>Containers</h4>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">-d</span> <span class="c-flag">-p</span> <span class="c-val">5000:5000</span> <span class="c-flag">--name</span> <span class="c-val">api</span> <span class="c-val">name</span>   <span class="c-comment"># run detached</span>
+<span class="c-cmd">docker</span> ps <span class="c-flag">-a</span>                  <span class="c-comment"># all containers</span>
+<span class="c-cmd">docker</span> logs <span class="c-flag">-f</span> <span class="c-val">api</span>             <span class="c-comment"># follow logs</span>
+<span class="c-cmd">docker</span> exec <span class="c-flag">-it</span> <span class="c-val">api</span> sh          <span class="c-comment"># shell inside container</span>
+<span class="c-cmd">docker</span> stop <span class="c-val">api</span> <span class="c-pipe">&&</span> <span class="c-cmd">docker</span> rm <span class="c-val">api</span>  <span class="c-comment"># stop + remove</span></pre>
+    </div>
+
+    <h4>Env & Volumes</h4>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> run <span class="c-flag">--env-file</span> <span class="c-val">.env</span> <span class="c-val">name</span>        <span class="c-comment"># load env vars from file</span>
+<span class="c-cmd">docker</span> run <span class="c-flag">-v</span> <span class="c-val">mongo-data:/data/db</span> <span class="c-val">mongo:7</span>  <span class="c-comment"># persistent data</span></pre>
+    </div>
+
+    <h4>Compose</h4>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> compose up <span class="c-flag">-d</span>      <span class="c-comment"># start full stack</span>
+<span class="c-cmd">docker</span> compose logs <span class="c-flag">-f</span>    <span class="c-comment"># all service logs</span>
+<span class="c-cmd">docker</span> compose down       <span class="c-comment"># stop (keeps volumes)</span>
+<span class="c-cmd">docker</span> compose down <span class="c-flag">-v</span>    <span class="c-comment"># stop + wipe volumes</span></pre>
+    </div>
+
+    <h4>Cleanup</h4>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-label">Terminal</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+<pre><span class="c-cmd">docker</span> system prune <span class="c-flag">-a</span>    <span class="c-comment"># reclaim disk (removes unused)</span></pre>
+    </div>
+
+    <hr class="divider">
+
+    <div class="concept">
+      <div class="concept-label">The one-sentence takeaway</div>
+      <p>Docker packages your <strong>code + environment</strong> into an image; you run that image as a container that behaves <strong>identically everywhere</strong>. Compose wires multiple containers (API + DB) into one stack. Volumes keep your data alive.</p>
+    </div>
+
+    <footer>
+      <span>Sheryians Coding School · Docker for Backend Notes</span>
+      <span>Stack: MERN · Runtime: node:20-alpine · DB: mongo:7</span>
+    </footer>
+  </section>
+</main>
+</div>
+
+<div class="watermark">
+  <img src="/favicon_FuNGo5cLy.png" alt="" class="watermark-logo">
+  <span class="watermark-text">Sheryians Coding School</span>
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrap').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.textContent;
+    btn.textContent = 'copied';
+    setTimeout(() => { btn.textContent = original; }, 1400);
+  });
+}
+
+// Scrollspy — highlight active nav item
+const sections = document.querySelectorAll('.section, .hero');
+const navLinks = document.querySelectorAll('nav a');
+const linkById = {};
+navLinks.forEach(a => { linkById[a.getAttribute('href').slice(1)] = a; });
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = linkById[entry.target.id];
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => { if (s.id) observer.observe(s); });
+</script>
+</body>
+</html>
