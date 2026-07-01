@@ -2,7 +2,7 @@ import * as userDao from '../dao/user.dao.js';
 import * as sessionDao from '../dao/session.dao.js';
 import * as authUtils from '../utils/auth.utils.js';
 import config from '../config/config.js';
-
+import { getRedisClient } from '../config/cache.js';
 
 /**
  * Registers a new user with the provided username, email, and password.
@@ -212,4 +212,53 @@ export const getMe = async (req, res) => {
         }
     })
 
+}
+
+
+/**
+ * Gets the current authenticated user.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the user data is retrieved.
+ */
+export const getCurrentUser = async (req, res) => {
+    const redisClient = getRedisClient();
+
+    const userId = req.userId;
+
+    const isUserInCache = await redisClient.get(`user:${userId}`);
+
+    if (isUserInCache) {
+        const user = JSON.parse(isUserInCache);
+        return res.status(200).json({
+            message: 'Current user data retrieved successfully (from cache)',
+            data: {
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email
+                }
+            }
+        })
+    }
+
+    const user = await userDao.getUserById(userId);
+
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Store the user data in Redis cache for future requests
+    await redisClient.set(`user:${userId}`, JSON.stringify(user),'EX', 900); // Cache for 15 minutes
+
+    return res.status(200).json({
+        message: 'Current user data retrieved successfully',
+        data: {
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        }
+    })
 }

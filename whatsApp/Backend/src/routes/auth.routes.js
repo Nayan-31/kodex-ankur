@@ -1,6 +1,7 @@
 import * as authController from '../controllers/auth.controller.js';
 import { Router } from 'express';
 import * as authValidator from '../validator/auth.validator.js';
+import { authUser } from '../middlewares/auth.middleware.js';
 
 
 const authRouter = Router();
@@ -39,6 +40,15 @@ authRouter.post('/logout', authController.logoutUser);
  * @public
  */
 authRouter.post('/refresh-token', authController.refreshTokenController);
+
+
+/**
+ * Route for getting the current authenticated user.
+ * @name GET /api/auth/current-user
+ * @public
+ */
+authRouter.get('/current-user', authUser, authController.getCurrentUser);
+
 
 
 

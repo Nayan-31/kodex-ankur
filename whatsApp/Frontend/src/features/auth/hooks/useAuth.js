@@ -1,5 +1,5 @@
 import { setUser, setAccessToken, setLoading, setError } from "../state/auth.slice"
-import { registerUser, loginUser } from "../services/auth.api"
+import { registerUser, loginUser, getCurrentUser } from "../services/auth.api"
 import { useDispatch } from "react-redux"
 
 
@@ -35,13 +35,34 @@ const useAuth = () => {
      */
     const login = async ({ email, password }) => {
         const data = await loginUser({ email, password })
+
+        console.log("Login data:", data)
+
         dispatch(setUser(data.user))
         dispatch(setAccessToken(data.accessToken))
     }
 
 
+    /**
+     * Gets the current authenticated user from backend and updates the Redux store with the user's information.
+     * @returns {Promise<void>} A promise that resolves when the user data is fetched and the Redux store is updated.
+     */
+    const handleGetCurrentUser = async () => {
 
-    return { register, login }
+        try {
+            const data = await getCurrentUser()
+            dispatch(setUser(data.user))
+        }
+        catch (error) {
+            console.error("Error fetching current user:", error)
+        } finally {
+            dispatch(setLoading(false))
+        }
+
+    }
+
+
+    return { register, login, handleGetCurrentUser }
 }
 
 export default useAuth
