@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Provider } from "react-redux"
 import { store } from "./app.store"
 import { RouterProvider } from "react-router"
@@ -13,6 +13,7 @@ function Main() {
 
   useEffect(() => {
     handleGetCurrentUser()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   
   return <RouterProvider router={router} />

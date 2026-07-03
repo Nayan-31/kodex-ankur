@@ -1,5 +1,5 @@
-import { setUser, setAccessToken, setLoading, setError } from "../state/auth.slice"
-import { registerUser, loginUser, getCurrentUser } from "../services/auth.api"
+import { setUser, setAccessToken, setLoading } from "../state/auth.slice"
+import { registerUser, loginUser, getCurrentUser, logoutUser } from "../services/auth.api"
 import { useDispatch } from "react-redux"
 
 
@@ -62,7 +62,23 @@ const useAuth = () => {
     }
 
 
-    return { register, login, handleGetCurrentUser }
+    /**
+     * Logs out the user by making the API call and clearing local state/auth keys.
+     * @returns {Promise<void>}
+     */
+    const logout = async () => {
+        try {
+            await logoutUser()
+        } catch (error) {
+            console.error("Logout error in hook:", error)
+        } finally {
+            dispatch(setUser(null))
+            dispatch(setAccessToken(null))
+        }
+    }
+
+
+    return { register, login, handleGetCurrentUser, logout }
 }
 
 export default useAuth

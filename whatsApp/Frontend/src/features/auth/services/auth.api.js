@@ -90,3 +90,13 @@ export const getCurrentUser = async () => {
     const response = await authApi.get("/current-user")
     return response.data.data
 }
+
+
+/**
+ * Logs out the current user.
+ * @returns {Promise<Object>} A promise that resolves to the response data from the server.
+ */
+export const logoutUser = async () => {
+    const response = await authApi.post("/logout")
+    return response.data
+}
