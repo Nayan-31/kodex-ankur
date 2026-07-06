@@ -54,6 +54,9 @@ export function initializeSocketServer(httpServer) {
 
             const receiver = data[ "receiver" ]
 
+            data.conversationId = conversationId
+            data.senderId = socket.userId
+
             io.timeout(10000).to(receiver).emit("receiveMessage", data, (err, response) => {
                 console.log("Message sent to receiver:", receiver, "Error:", err, "Response:", response)
             })

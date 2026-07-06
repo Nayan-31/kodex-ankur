@@ -31,7 +31,9 @@ export async function getConversationById(conversationId) {
  * @returns {Promise<Array>} - A promise that resolves to an array of conversation objects.
  */
 export async function getConversationsByUserId(userId) {
-    const conversations = await conversationModel.find({ participants: { $in: [ userId ] } })
+    const conversations = await conversationModel
+        .find({ participants: { $in: [ userId ] } })
+        .populate('participants', 'username email')
     return conversations
 }
 

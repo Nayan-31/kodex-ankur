@@ -50,11 +50,13 @@ const getAvatarColor = (name = "") => {
     return colors[ sum % colors.length ]
 }
 
+
+
 const Home = () => {
     const currentUser = useSelector((state) => state.auth.user)
     const { logout } = useAuth()
     const searchUserResult = useSelector((state) => state.chat.searchUserResult)
-    const activeConversation = useSelector((state) => state.chat.activeConversation)
+    const activeConversationId = useSelector((state) => state.chat.activeConversation)
     const user = useSelector((state) => state.auth.user)
 
     const {
@@ -63,39 +65,20 @@ const Home = () => {
         handleSetActiveConversation,
         handleSetConversations,
         createSocketConnection,
-        handleSendChatMessage } = useChat()
+        handleSendChatMessage,
+        handleCreateConversation,
+        handleGetMyConversations,
+        setupSocket,
+        handleGetMessages
+    } = useChat()
 
     // Mock initial conversations (seed data)
     const conversations = useSelector((state) => state.chat.conversations)
 
     // Mock initial message history
-    const [ messages, setMessages ] = useState({
-        sarah_jenkins: [
-            { id: 1, sender: 'Sarah Jenkins', content: 'Hey! Did you check out the new design constraints?', timestamp: '10:24 AM' },
-            { id: 2, sender: 'me', content: 'Yes! The client requested solid colors and plenty of breathing space.', timestamp: '10:25 AM' },
-            { id: 3, sender: 'Sarah Jenkins', content: 'Are we still meeting at 3?', timestamp: '10:26 AM' }
-        ],
-        david_miller: [
-            { id: 1, sender: 'David Miller', content: 'Hi there, let me know if you need the updated details.', timestamp: '9:10 AM' },
-            { id: 2, sender: 'me', content: 'Sure, please mail them to me.', timestamp: '9:12 AM' },
-            { id: 3, sender: 'David Miller', content: 'I sent you the project report.', timestamp: '9:15 AM' }
-        ],
-        alex_rivera: [
-            { id: 1, sender: 'me', content: 'Hey Alex, how is the backend server doing?', timestamp: 'Yesterday' },
-            { id: 2, sender: 'alex_rivera', content: 'Working fine. Sockets are setup too.', timestamp: 'Yesterday' },
-            { id: 3, sender: 'me', content: 'Perfect.', timestamp: 'Yesterday' },
-            { id: 4, sender: 'Alex Rivera', content: 'Thanks, talk to you later!', timestamp: 'Yesterday' }
-        ],
-        emily_chen: [
-            { id: 1, sender: 'emily_chen', content: 'Just saw the staging build.', timestamp: 'Yesterday' },
-            { id: 2, sender: 'Emily Chen', content: 'Awesome layout! Looks super clean.', timestamp: 'Yesterday' }
-        ],
-        marcus_aurelius: [
-            { id: 1, sender: 'Marcus Aurelius', content: 'Waste no more time arguing about what a good man should be. Be one.', timestamp: '2 days ago' }
-        ]
-    })
+    const messages = useSelector(state => state.chat.messages)
 
-    const [ activeChatId, setActiveChatId ] = useState(null)
+
     const [ searchQuery, setSearchQuery ] = useState('')
 
     const [ inputValue, setInputValue ] = useState('')
@@ -103,10 +86,17 @@ const Home = () => {
     const [ isSearching, setIsSearching ] = useState(false)
 
     const messagesEndRef = useRef(null)
-    const activeChat = conversations.find(c => c.id === activeChatId)
+
+    console.log({ conversations, activeConversationId })
+    const activeChat = conversations.find(c => c._id === activeConversationId)
+
+    console.log({ activeChat })
+    console.log({ messages })
 
     useEffect(() => {
-        createSocketConnection()
+        setupSocket()
+        handleGetMyConversations()
+        handleGetMessages()
     }, [])
 
     // Scroll to the bottom when the active chat or messages update
@@ -114,7 +104,7 @@ const Home = () => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
         }
-    }, [ activeChatId, messages ])
+    }, [ messages, activeConversationId ])
 
     // Query backend when search query updates
     useEffect(() => {
@@ -140,21 +130,24 @@ const Home = () => {
     // Handle sending a message
     const handleSendMessage = (e) => {
         e.preventDefault()
-        if (!inputValue.trim() || !activeChatId) return
+        if (!inputValue.trim() || !activeConversationId) return
 
         const newMessage = {
             id: Date.now(),
-            sender: user._id,
-            receiver: activeConversation._id,
+            senderId: user.id || user.id,
+            receiver: activeChat?.recipientId,
             content: inputValue,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
 
+
+
+
         // Append message
-        setMessages(prev => ({
-            ...prev,
-            [ activeChatId ]: [ ...(prev[ activeChatId ] || []), newMessage ]
-        }))
+        // setMessages(prev => ({
+        //     ...prev,
+        //     [ activeConversationId ]: [ ...(prev[ activeConversationId ] || []), newMessage ]
+        // }))
 
         // Update conversation list item last message
         // handleSetConversations(prev => {
@@ -173,11 +166,7 @@ const Home = () => {
 
         setInputValue('')
 
-        handleSendMessage(newMessage)
-
-
-
-
+        handleSendChatMessage(newMessage, activeConversationId)
     }
 
     // Select or initialize a new conversation with a search result
@@ -185,22 +174,24 @@ const Home = () => {
         const conversationId = user.id || user._id || user.username.toLowerCase().replace(/\s+/g, '_')
 
         // Check if conversation already exists in active conversations list
-        const exists = conversations.some(c => c.id === conversationId)
+        // const exists = conversations.some(c => c.id === conversationId)
 
-        if (!exists) {
-            // Add new conversation
-            const newConv = {
-                id: conversationId,
-                username: user.username,
-                email: user.email,
-                lastMessage: 'Tap to start talking!',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                unread: false
-            }
-            handleAppendConversation(newConv)
-        }
+        // if (!exists) {
+        // // Add new conversation
+        // const newConv = {
+        //     id: conversationId,
+        //     username: user.username,
+        //     email: user.email,
+        //     lastMessage: 'Tap to start talking!',
+        //     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        //     unread: false
+        // }
+        // handleAppendConversation(newConv)
 
-        handleSetActiveConversation(conversationId)
+        // }
+        handleCreateConversation(user._id)
+
+        // handleSetActiveConversation(conversationId)
         setSearchQuery('')
     }
 
@@ -296,12 +287,12 @@ const Home = () => {
                             </div>
                         ) : (
                             filteredConversations.map(conv => {
-                                const isActive = conv.id === activeChatId
+                                const isActive = conv._id === activeConversationId
                                 return (
                                     <button
-                                        key={conv.id}
+                                        key={conv._id}
                                         onClick={() => {
-                                            setActiveChatId(conv.id)
+                                            handleSetActiveConversation(conv._id)
                                         }}
                                         className={`w-full px-6 py-4 flex items-center gap-3.5 text-left border-l-4 transition-all cursor-pointer ${isActive
                                             ? 'bg-slate-50 border-slate-900'
@@ -358,16 +349,16 @@ const Home = () => {
 
                         {/* Message Log */}
                         <div className="flex-1 overflow-y-auto p-8 space-y-4">
-                            {(messages[ activeChatId ] || []).length === 0 ? (
+                            {(messages[ activeConversationId ] || []).length === 0 ? (
                                 <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">
                                     No messages yet. Say hello!
                                 </div>
                             ) : (
-                                (messages[ activeChatId ] || []).map((msg) => {
-                                    const isMe = msg.sender === 'me'
+                                (messages[ activeConversationId ] || []).map((msg) => {
+                                    const isMe = msg.senderId === (user._id || user.id)
                                     return (
                                         <div
-                                            key={msg.id}
+                                            key={msg._id}
                                             className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                                         >
                                             <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${isMe

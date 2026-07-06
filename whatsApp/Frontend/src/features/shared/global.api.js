@@ -1,11 +1,12 @@
 import axios from "axios"
-
+import { attachInterceptors } from "../../utils/axios.interceptor"
 
 const globalApi = axios.create({
     baseURL: "/api",
     withCredentials: true,
 })
 
+attachInterceptors(globalApi)
 
 /**
  * Searches users from the database based on username.

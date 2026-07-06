@@ -1,7 +1,8 @@
 import { searchUsers } from "../../shared/global.api"
 import { useDispatch } from "react-redux"
-import { setSearchUserResult, setActiveConversation, setConversations, appendConversation } from "../state/chat.slice"
-import { createSocketConnection, emitEvent } from "../../shared/services/chat.socket"
+import { setSearchUserResult, setActiveConversation, setConversations, appendConversation, appendMessage, setMessages } from "../state/chat.slice"
+import { createSocketConnection, emitEvent, addListener } from "../../shared/services/chat.socket"
+import { createConversation, getMyConversations, getMessages } from "../services/chats.api"
 
 
 
@@ -29,8 +30,53 @@ const useChat = () => {
         dispatch(appendConversation(conversation))
     }
 
-    const handleSendChatMessage = (message) => {
+    const handleSendChatMessage = (message, conversationId) => {
         emitEvent("sendMessage", message)
+        dispatch(appendMessage({ conversationId, message }))
+    }
+
+    const handleCreateConversation = async (recipientId) => {
+
+        try {
+            const conversation = await createConversation(recipientId)
+            dispatch(appendConversation(conversation))
+            dispatch(setActiveConversation(conversation._id))
+        } catch (error) {
+            console.error("Error creating conversation:", error)
+        }
+
+
+    }
+
+    const handleGetMyConversations = async () => {
+        try {
+            const conversations = await getMyConversations()
+            console.log("conversation: ", conversations)
+            dispatch(setConversations(conversations))
+        } catch (error) {
+            console.error("Error getting conversations:", error)
+            dispatch(setConversations([]))
+        }
+    }
+
+    const handleGetMessages = async () => {
+        const messages = await getMessages()
+        dispatch(setMessages(messages))
+    }
+
+
+    const setupSocket = () => {
+
+        createSocketConnection()
+
+        addListener("receiveMessage", (message) => {
+            console.log(message)
+
+            console.log({ conversationId: message.conversationId, message })
+
+            dispatch(appendMessage({ conversationId: message.conversationId, message }))
+        })
+
     }
 
 
@@ -40,7 +86,11 @@ const useChat = () => {
         handleSetConversations,
         handleAppendConversation,
         createSocketConnection,
-        handleSendChatMessage
+        handleSendChatMessage,
+        handleCreateConversation,
+        handleGetMyConversations,
+        setupSocket,
+        handleGetMessages
     }
 
 }

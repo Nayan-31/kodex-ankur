@@ -12,3 +12,14 @@ export async function createMessage(messageData) {
     const message = await messageModel.create(messageData)
     return message
 }
+
+
+/**
+ * Retrieves all messages for a specific conversation.
+ * @param {string} conversationId - The ID of the conversation for which to retrieve messages.
+ * @returns {Promise<Array>} - A promise that resolves to an array of message objects.
+ */
+export async function getMessagesByConversationId(conversationId) {
+    const messages = await messageModel.find({ conversationId }).sort({ createdAt: 1 })
+    return messages
+}

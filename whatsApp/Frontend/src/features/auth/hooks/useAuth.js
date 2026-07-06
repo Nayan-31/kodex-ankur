@@ -36,8 +36,6 @@ const useAuth = () => {
     const login = async ({ email, password }) => {
         const data = await loginUser({ email, password })
 
-        console.log("Login data:", data)
-
         dispatch(setUser(data.user))
         dispatch(setAccessToken(data.accessToken))
     }
@@ -48,7 +46,6 @@ const useAuth = () => {
      * @returns {Promise<void>} A promise that resolves when the user data is fetched and the Redux store is updated.
      */
     const handleGetCurrentUser = async () => {
-
         try {
             const data = await getCurrentUser()
             dispatch(setUser(data.user))
@@ -58,7 +55,6 @@ const useAuth = () => {
         } finally {
             dispatch(setLoading(false))
         }
-
     }
 
 

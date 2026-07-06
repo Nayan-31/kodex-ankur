@@ -22,3 +22,9 @@ export const emitEvent = (eventName, payload) => {
 
     socket.emit(eventName, payload)
 }
+
+
+
+export const addListener = (eventName, callback) => {
+    socket.on(eventName, callback)
+}
