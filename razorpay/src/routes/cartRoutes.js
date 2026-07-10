@@ -1,11 +1,11 @@
 import { Router } from 'express';
 
 import {
-  addItemToCart,
-  clearCart,
-  getCart,
-  removeCartItem,
-  updateCartItem
+    addItemToCart,
+    clearCart,
+    getCart,
+    removeCartItem,
+    updateCartItem
 } from '../controllers/cartController.js';
 import { requireAuth } from '../middleware/auth.js';
 

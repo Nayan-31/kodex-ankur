@@ -1,11 +1,11 @@
 import { Router } from 'express';
 
 import {
-  createProduct,
-  deleteProduct,
-  getProduct,
-  listProducts,
-  updateProduct
+    createProduct,
+    deleteProduct,
+    getProduct,
+    listProducts,
+    updateProduct
 } from '../controllers/productController.js';
 import { requireAuth } from '../middleware/auth.js';
 
