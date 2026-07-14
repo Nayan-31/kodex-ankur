@@ -14,4 +14,4 @@ export const commentsData = [
     { _id: 'c13', postId: 'p6', userId: 'u1', text: 'Closures took me a month lol', createdAt: '2024-06-08', likesCount: 30 },
     { _id: 'c14', postId: 'p6', userId: 'u5', text: 'Underrated concept, good post', createdAt: '2024-06-09', likesCount: 14 },
     { _id: 'c15', postId: 'p6', userId: 'u8', text: 'Bookmarking this', createdAt: '2024-06-09', likesCount: 7 }
-];
+]
